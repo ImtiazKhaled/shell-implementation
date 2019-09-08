@@ -103,6 +103,8 @@ int main(){
     // is no input
     while( !fgets (cmd_str, MAX_COMMAND_SIZE, stdin) );
 
+    if(strcmp(cmd_str, "\n") == 0)  continue;
+
     /* Parse input */
     char *token[MAX_NUM_ARGUMENTS];
 
