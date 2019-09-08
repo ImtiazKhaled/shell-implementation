@@ -45,6 +45,8 @@
 
 #define HISTORY_NUM 15          // The number of commands to store
 
+#define SHELL_NAME "msh>"
+
 // Structure to store the previous 15 commands in
 typedef struct hist{
  
@@ -59,7 +61,7 @@ static void handle_signal (int sig ){
   switch( sig )
   {
     case SIGINT: 
-    printf("\nmsh> ");
+    printf("\n%s ", SHELL_NAME);
     break;
 
     case SIGTSTP: 
@@ -92,7 +94,7 @@ int main(){
 
   while( 1 ){
     // Print out the msh prompt
-    printf ("msh> ");
+    printf("%s ", SHELL_NAME);
 
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
@@ -133,7 +135,6 @@ int main(){
     }
 
     // Now print the tokenized input as a debug check
-    // \TODO Remove this code and replace with your shell functionality
 
       if (sigaction(SIGINT , &act, NULL) < 0){
         perror("cntrl C error");
@@ -177,20 +178,27 @@ int main(){
     }
 
     i = 1;
-    if( history_index == 14 ){
-      for(i = 1; i < 14; ++i){
-          history[i] = history[i - 1];
+    if( history_index == HISTORY_NUM ){
+      // If the array is filled, then the program removes the first index, and 
+      // replaces it next one, and iterates through the arary to do it through
+      // the whole array, and inserts the current command to the end of the array
+      for(i = 1; i < HISTORY_NUM; ++i){
+          history[i - 1] = history[i];
       }
+      strcpy(history[history_index - 1].command, curr_command);
+      history[history_index - 1].command_pid = curr_pid;
     }else{
-        strcpy(history[history_index].command, curr_command);
-        history[history_index].command_pid = curr_pid;
-        ++history_index;
+      // Program copies the current command and the current pid to the next free
+      // array index of the hist structure 
+      strcpy(history[history_index].command, curr_command);
+      history[history_index].command_pid = curr_pid;
+      ++history_index;
     }
 
-    int token_index  = 0;
-    for( token_index = 0; token_index < token_count; token_index ++ ){
-      printf("token[%d] = %s\n", token_index, token[token_index] );  
-    }
+    // int token_index  = 0;
+    // for( token_index = 0; token_index < token_count; token_index ++ ){
+    //   printf("token[%d] = %s\n", token_index, token[token_index] );  
+    // }
 
     free( working_root );
   }
