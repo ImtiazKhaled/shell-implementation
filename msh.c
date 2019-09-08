@@ -1,3 +1,7 @@
+/*
+  Name: Imtiaz Mujtaba Khaled
+  ID: 1001551928
+*/
 // The MIT License (MIT)
 // 
 // Copyright (c) 2016, 2017 Trevor Bakker 
@@ -37,15 +41,54 @@
 
 #define MAX_COMMAND_SIZE 255    // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 5     // Mav shell only supports five arguments
+#define MAX_NUM_ARGUMENTS 10    // Mav shell now supports ten arguments
+
+#define HISTORY_NUM 15          // The number of commands to store
+
+// Structure to store the previous 15 commands in
+typedef struct hist{
+ 
+ char* command;
+ pid_t curr_pid;
+
+}hist;
+
+
+// This function handels the two specified singals it receives from main
+static void handle_signal (int sig ){
+  switch( sig )
+  {
+    case SIGINT: 
+    printf("\nmsh> ");
+    break;
+
+    case SIGTSTP: 
+      printf("Caught cntrl Z\n");
+    break;
+
+    default: 
+      printf("Unable to determine the signal\n");
+    break;
+
+  }
+}
 
 int main(){
 
   char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
 
+
   while( 1 ){
     // Print out the msh prompt
     printf ("msh> ");
+
+    struct sigaction act;
+
+    // Set sigaction struct to 0
+    memset(&act, '\0', sizeof(act));
+    
+    // Set handler to use the signal handle function
+    act.sa_handler = &handle_signal;
 
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
@@ -75,8 +118,7 @@ int main(){
               (token_count<MAX_NUM_ARGUMENTS)){
 
       token[token_count] = strndup( arg_ptr, MAX_COMMAND_SIZE );
-      if( strlen( token[token_count] ) == 0 )
-      {
+      if( strlen( token[token_count] ) == 0 ){
         token[token_count] = NULL;
       }
         token_count++;
@@ -84,6 +126,17 @@ int main(){
 
     // Now print the tokenized input as a debug check
     // \TODO Remove this code and replace with your shell functionality
+
+
+      if (sigaction(SIGINT , &act, NULL) < 0){
+        perror("cntrl C error");
+        return 0;
+      }
+
+      if (sigaction(SIGTSTP , &act, NULL) < 0){
+        perror ("cntrl Z error");
+        return 0;
+      }    
 
     if(strcmp(token[0],"exit") == 0 || strcmp(token[0],"quit") == 0){
     // Exit when user input is exit or quit        
@@ -102,7 +155,6 @@ int main(){
       printf("something else");
 
     }
-
 
     int token_index  = 0;
     for( token_index = 0; token_index < token_count; token_index ++ ){
