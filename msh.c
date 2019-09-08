@@ -85,11 +85,22 @@ int main(){
     // Now print the tokenized input as a debug check
     // \TODO Remove this code and replace with your shell functionality
 
-    // Exit when user input is exit or quit
     if(strcmp(token[0],"exit") == 0 || strcmp(token[0],"quit") == 0){
-        
-        break;
+    // Exit when user input is exit or quit        
+      break;
     
+    }else if(strcmp(token[0],"cd") == 0){
+    
+      if(chdir(token[1]) != 0){ // Check if directory entered exits
+        printf("that directory does not exist.\n");
+      }else{
+      // Directory changed, if it exits
+      }
+
+    }else{
+
+      printf("something else");
+
     }
 
 
