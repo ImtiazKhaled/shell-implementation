@@ -39,13 +39,11 @@
 
 #define MAX_NUM_ARGUMENTS 5     // Mav shell only supports five arguments
 
-int main()
-{
+int main(){
 
   char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
 
-  while( 1 )
-  {
+  while( 1 ){
     // Print out the msh prompt
     printf ("msh> ");
 
@@ -74,8 +72,8 @@ int main()
 
     // Tokenize the input stringswith whitespace used as the delimiter
     while ( ( (arg_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
-              (token_count<MAX_NUM_ARGUMENTS))
-    {
+              (token_count<MAX_NUM_ARGUMENTS)){
+
       token[token_count] = strndup( arg_ptr, MAX_COMMAND_SIZE );
       if( strlen( token[token_count] ) == 0 )
       {
@@ -87,9 +85,16 @@ int main()
     // Now print the tokenized input as a debug check
     // \TODO Remove this code and replace with your shell functionality
 
+    // Exit when user input is exit or quit
+    if(strcmp(token[0],"exit") == 0 || strcmp(token[0],"quit") == 0){
+        
+        break;
+    
+    }
+
+
     int token_index  = 0;
-    for( token_index = 0; token_index < token_count; token_index ++ ) 
-    {
+    for( token_index = 0; token_index < token_count; token_index ++ ){
       printf("token[%d] = %s\n", token_index, token[token_index] );  
     }
 
