@@ -215,8 +215,8 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history){
 
 int main(){
   
-  char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
-  
+  int i;
+
   // History and Showpids command helpers
   hist *history = (hist*)malloc(HISTORY_NUM*sizeof(hist));
   int history_index = 0;
@@ -230,6 +230,9 @@ int main(){
   act.sa_handler = &handle_signal;
 
   while( 1 ){
+    
+    char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
+        
     // Print out the msh prompt
     printf("%s ", SHELL_NAME);
 
@@ -250,12 +253,38 @@ int main(){
       perror ("cntrl Z error");
       return 0;
     }    
+    
+    // Manipulate the input to string to store the string 
+    // before and after the first semi-colon
+    char * cpy_cmd_str = strdup(cmd_str);
+    strtok(cmd_str, ";");
+    strtok_r(cpy_cmd_str, ";", &cpy_cmd_str);
+    
 
-    shell_operations(cmd_str, &history_index, history);
+    while(cmd_str[0] != '\0') {
+      
+      if(cmd_str[0] == ' '){
+        i = 1;
+        for(i = 1; i < strlen(cmd_str); ++i){
+          cmd_str[i - 1] = cmd_str[i];
+        }
+      }
 
-    // Call function here    
+      shell_operations(cmd_str, &history_index, history);
+
+      // String manipulation to break the different commands by
+      // the semi-colon and loop through each command
+      strcpy(cmd_str, cpy_cmd_str);
+      strtok(cmd_str, ";");
+      strtok_r(NULL, ";", &cpy_cmd_str);
+      
+    }
+
+    free( cmd_str );
+ 
   }
 
   free( history );
   return 0;
+
 }
