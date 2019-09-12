@@ -77,11 +77,33 @@ static void handle_signal (int sig ){
   }
 }
 
+void add_to_history(int (*history_index), hist * history, char * curr_command, pid_t curr_pid){
+
+  int i = 1;
+  if( (*history_index) == HISTORY_NUM ){
+    // If the array is filled, then the program removes the first index, and 
+    // replaces it next one, and iterates through the arary to do it through
+    // the whole array, and inserts the current command to the end of the array
+  for(i = 1; i < HISTORY_NUM; ++i){
+    history[i - 1] = history[i];
+  }
+  strcpy(history[(*history_index) - 1].command, curr_command);
+  history[(*history_index) - 1].command_pid = curr_pid;
+  }else{
+     // Program copies the current command and the current pid to the next free
+     // array index of the hist structure 
+     strcpy(history[(*history_index)].command, curr_command);
+     history[(*history_index)].command_pid = curr_pid;
+     ++(*history_index);
+ }
+
+}
+
+
 // This function handels all the shell operations 
-void shell_operations(char * cmd_str, int (*history_index), hist * history){
+void shell_operations(char * cmd_str, int (*history_index), hist * history, int addToHistory){
   
   int i;
-  
   // Ignores user input if it is a blank line
   if(strcmp(cmd_str, "\n") == 0)  return;
   
@@ -163,43 +185,35 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history){
       }else{
       
         //Execute the command
-        shell_operations(history[cmdNum].command, history_index, history);
+        shell_operations(history[cmdNum].command, history_index, history, 0);
       
       }
 
     }else{
-
+    
       printf("%s: Command not found.\n", curr_command);
-
 
     }
   }else{
     
-    printf("something else");
+    curr_pid = fork();
+    char * currdir = (char *)malloc(sizeof(char)* MAX_COMMAND_SIZE); 
+    // currdir = ;
+    // getcwd(currdir, 100);
+    strcpy(currdir, "/bin/");
+    strcat(currdir, token[0]);
+    int status;
+    if(curr_pid == 0){
+      execv(currdir, token);
+      exit(0);
+    } 
+
+    waitpid(curr_pid, &status, 0);
 
   }
-  i = 1;
-  if( (*history_index) == HISTORY_NUM ){
 
-    // If the array is filled, then the program removes the first index, and 
-    // replaces it next one, and iterates through the arary to do it through
-    // the whole array, and inserts the current command to the end of the array
-    for(i = 1; i < HISTORY_NUM; ++i){
-
-        history[i - 1] = history[i];
-
-    }
-    strcpy(history[(*history_index) - 1].command, curr_command);
-    history[(*history_index) - 1].command_pid = curr_pid;
-
-  }else{
-
-    // Program copies the current command and the current pid to the next free
-    // array index of the hist structure 
-    strcpy(history[(*history_index)].command, curr_command);
-    history[(*history_index)].command_pid = curr_pid;
-    ++(*history_index);
-
+  if(addToHistory){
+    add_to_history(history_index, history, curr_command, curr_pid);    
   }
 
   // int token_index  = 0;
@@ -259,7 +273,7 @@ int main(){
     char * cpy_cmd_str = strdup(cmd_str);
     strtok(cmd_str, ";");
     strtok_r(cpy_cmd_str, ";", &cpy_cmd_str);
-    
+    // printf("%s", cmd_str);
 
     while(cmd_str[0] != '\0') {
       
@@ -270,8 +284,8 @@ int main(){
         }
       }
 
-      shell_operations(cmd_str, &history_index, history);
-
+      shell_operations(cmd_str, &history_index, history, 1);
+      
       // String manipulation to break the different commands by
       // the semi-colon and loop through each command
       strcpy(cmd_str, cpy_cmd_str);
