@@ -49,6 +49,8 @@
 
 #define SHELL_NAME "msh>"
 
+#define PATHS {"/","/usr/local/bin/","/usr/bin/","/bin/"}
+
 // Structure to store the previous 15 commands in
 typedef struct hist{
  
@@ -109,7 +111,9 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
   
   /* Parse input */
   char *token[MAX_NUM_ARGUMENTS];
-  int   token_count = 0;                                 
+  int   token_count = 0;               
+
+  char * paths[] = PATHS;                
                                                          
   // Pointer to point to the token
   // parsed by strsep
@@ -147,7 +151,9 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
   }else if(strcmp(token[0],"cd") == 0){
   
     if(chdir(token[1]) != 0){ // Check if directory entered exits
+
       printf("that directory does not exist.\n");
+
     }else{
     // Directory changed, if it exits
     }
@@ -197,18 +203,35 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
   }else{
     
     curr_pid = fork();
-    char * currdir = (char *)malloc(sizeof(char)* MAX_COMMAND_SIZE); 
-    // currdir = ;
-    // getcwd(currdir, 100);
-    strcpy(currdir, "/bin/");
-    strcat(currdir, token[0]);
-    int status;
-    if(curr_pid == 0){
-      execv(currdir, token);
-      exit(0);
-    } 
+    int res_exec;
+    for(i = 0; i < 4; ++i){
+      char * currdir = (char *)malloc(sizeof(char)* MAX_COMMAND_SIZE); 
+      strcpy(currdir, paths[i]);
+      strcat(currdir, token[0]);
+      int status;
+      
+      if(curr_pid == 0){
 
-    waitpid(curr_pid, &status, 0);
+        res_exec = execv(currdir, token);
+  
+        if(res_exec != -1){
+        
+          free(currdir);
+          exit(0);
+          break;
+        
+        } 
+      
+      } 
+      waitpid(curr_pid, &status, 0);
+      free( currdir );
+    }
+    if(res_exec == -1){
+
+      printf("%s: Command not found.\n", curr_command);
+      exit(0);
+
+    }   
 
   }
 
@@ -228,7 +251,7 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
 
 
 int main(){
-  
+
   int i;
 
   // History and Showpids command helpers
