@@ -202,20 +202,21 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
     }
   }else{
     
-    curr_pid = fork();
+    curr_pid = fork();  // Forks the current process, and stores it pid
     int res_exec;
     for(i = 0; i < 4; ++i){
+      // Loops throught an array of char *, that contains all the PATHS to check
       char * currdir = (char *)malloc(sizeof(char)* MAX_COMMAND_SIZE); 
       strcpy(currdir, paths[i]);
       strcat(currdir, token[0]);
       int status;
       
       if(curr_pid == 0){
-
+        // If the fork was successful, then it runs execv on the user input
         res_exec = execv(currdir, token);
   
         if(res_exec != -1){
-        
+          // If the execv was succesful for the current PATH then loop breaks
           free(currdir);
           exit(0);
           break;
@@ -223,11 +224,14 @@ void shell_operations(char * cmd_str, int (*history_index), hist * history, int 
         } 
       
       } 
+
       waitpid(curr_pid, &status, 0);
       free( currdir );
+    
     }
-    if(res_exec == -1){
 
+    if(res_exec == -1){
+      // If command was not found in the list of PATHS, then program returns this
       printf("%s: Command not found.\n", curr_command);
       exit(0);
 
